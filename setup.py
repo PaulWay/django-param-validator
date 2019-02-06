@@ -5,6 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="django_param_validator",
+    packages=setuptools.find_packages('src'),
+    package_dir={'': 'src'},
+
     version="0.0.1",
     author="Paul Wayper",
     author_email="paulway@mabula.net",
@@ -14,6 +17,7 @@ setuptools.setup(
     url="https://github.com/PaulWay/django-param-validator",
     packages=setuptools.find_packages(),
     classifiers=[
+        'Development Status :: 3 - Alpha',
         "Framework :: Django :: 2.1",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
