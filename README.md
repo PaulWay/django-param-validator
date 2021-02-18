@@ -15,3 +15,4 @@ my_query_param = openapi.PARAMETER(
 def django_view(self, request):
     status = value_of_param(my_query_param, request)
     return Response("Your parrot is: " + status)
+```
