@@ -142,3 +142,52 @@ def value_of_param(param, request):
         value = request.META[param.name]
 
     return _validate_part(param.name, param, value)
+
+
+def filter_on_param(query_field, param, request, value_map=None):
+    """
+    Provide a Django Q object to filter on a field matching a given parameter,
+    if it's found in the request.  If the parameter is not specified in the
+    request, an empty Q object is returned (which does not change the filter).
+
+    Parameters:
+        - query_field: the field in the filtered queryset which will match
+          the parameter's value
+        - param: an OpenAPI parameter definition of the parameter
+        - request: the Django request object
+        - value_map: a dict to map input values to query values.  For example,
+          sort fields might have a 'nice' name in the URL and a different
+          name within the database.  If this is not provided, no value
+          mapping is done.
+
+    Returns:
+        - a Q object to use in a filter on a queryset.
+
+    Examples:
+
+        # A simple filter on the name field
+        qs = Model.objects.filter(filter_on_param(
+            'name', name_param, request
+        ))
+    """
+    param_value = value_of_param(param, request)
+    # If no parameter in request, and no default value, then no changes to
+    # queryset.
+    if param_value is None:
+        return Q()
+    if value_map:
+        # Note: if you want to have a mapping here, then make sure you use an
+        # enum in your parameter definition to validate the incoming value as
+        # one of your map entries.  That's a much better way of reporting
+        # errors to the user than throwing a KeyError here!
+        param_value = value_map[param_value]
+
+    if isinstance(param_value, list):
+        # Queries such as 'tags__contains' can't use '__in', so we have to
+        # OR a list of Q objects together.  Theoretically this isn't much
+        # slower.
+        return Q(reduce(lambda l, r: l | r, (
+            Q(**{query_field: v})
+            for v in param_value
+        )))
+    return Q(**{query_field: param_value})
